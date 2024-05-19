@@ -14,7 +14,9 @@
     "expo-sqlite": "~14.0.3",
     "@iconify/react": "*",
     "@expo/vector-icons": "^14.0.0",
-    "react-native-paper": "4.9.2"
+    "react-native-paper": "4.9.2",
+    "react-native-linear-gradient": "*",
+    "expo-linear-gradient": "~13.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
