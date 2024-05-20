@@ -1,11 +1,18 @@
-import React from 'react';
+import { Feather } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default TodoList = ({ list }) => {
   return (
-    <View style ={[styles.container, {backgroundColor: list.color }]}>
-      <Text style = {styles.category} numberOfLines={1}>
-      {list.name}
+    <View style={[styles.container, { backgroundColor: list.color }]}>
+      <View>
+        {list.completed ? (
+          <Feather name="check-square" style={styles.icon} />
+        ) : (
+          <Feather name="square" style={styles.icon} />
+        )}
+      </View>
+      <Text style={styles.categoryText} numberOfLines={1}>
+        {list.name}
       </Text>
     </View>
   );
@@ -19,11 +26,16 @@ const styles = StyleSheet.create({
     height: 40,
     marginBottom: 10,
   },
-  category: {
-    paddingLeft: 12,
-    alignSelf: 'center',
+  categoryText: {
+    paddingLeft: 8,
     fontSize: 24,
     fontWeight: '600',
-    textAlign: 'center',
+    paddingBottom: 4,
+  },
+  icon: {
+    fontSize: 26,
+    color: 'black',
+    paddingLeft: 8,
+    opacity: 1,
   }
 });

@@ -2,6 +2,8 @@ export default tempData = [
   {
     name: "Tutorial",
     color: '#FFFFFF',
+    opened: true,
+    completed: false,
     todos: [
       {
         title: "Complete a checklist item",
@@ -20,6 +22,8 @@ export default tempData = [
   {
     name: "Before you leave",
     color: '#FFFFFF',
+    opened: true,
+    completed: false,
     todos: [
       {
         title: "Phone",
