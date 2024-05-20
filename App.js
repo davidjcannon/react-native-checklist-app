@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 
 import React from 'react';
-import { Card } from 'react-native-paper';
 import { Feather } from '@expo/vector-icons';
 import tempData from './tempData';
 import TodoList from './components/TodoList';
@@ -35,12 +34,14 @@ export default class App extends React.Component {
         onRequestClose={() => this.toggleSettingsModal}>
         <SettingsModal closeModal={() => this.toggleSettingsModal()} />
         </Modal>
+
           <View style={styles.header}>
             <TouchableOpacity onPress={() => this.toggleSettingsModal()}>
               <Feather name="menu" size={40} color="white" />
             </TouchableOpacity>
             <Text style={styles.title}>Checklist</Text>
           </View>
+
           <View style={styles.tasks}>
             <FlatList
               data={tempData}
@@ -49,7 +50,13 @@ export default class App extends React.Component {
               renderItem={({ item }) => <TodoList list={item} />}
             />
           </View>
+
         </View>
+        <View style={styles.addItem}>
+        <Feather name="plus" size={22} color="black" />
+        <Text style={styles.addItemText}>Add Item</Text>
+        </View>
+
         <LinearGradient
           colors={['#4158D0', '#46578C', '#081F65']}
           style={styles.grad}
@@ -86,6 +93,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#ffff',
     paddingBottom: 5,
+  },
+  addItem: {
+    display: 'flex',
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    zIndex: 1,
+    alignItems: 'center',
+    alignSelf: 'center',
+    justifyContent: 'center',
+    borderRadius: 40,
+    width: '140px',
+    height: '38px',
+    marginBottom: '24px',
+  },
+  addItemText: {
+    fontWeight: 'bold',
+    paddingLeft: '10px',
   },
   grad: {
     ...StyleSheet.absoluteFillObject, // Position the gradient to cover the entire screen

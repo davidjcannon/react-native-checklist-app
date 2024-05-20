@@ -21,7 +21,8 @@ export default class SettingsModal extends React.Component {
           </TouchableOpacity>
           </View>
           <View style={styles.content}>
-          <Text>Settings Menu Placeholder</Text>
+          <Text style={styles.header}>Settings</Text>
+          <Text style={styles.setting}>Background Color</Text>
           </View>
         </SafeAreaView>
     );
@@ -37,9 +38,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    color: 'white',
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    margin: '20px',
   },
   close: {
     paddingRight: 8,
+  },
+  setting: {
+    color: 'white',
   },
   content: {
     flex: 1,

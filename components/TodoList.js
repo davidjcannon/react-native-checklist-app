@@ -21,10 +21,10 @@ export default TodoList = ({ list }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderRadius: 10,
     alignItems: 'center',
     height: 40,
     marginBottom: 10,
+    borderRadius: 10,
   },
   categoryText: {
     paddingLeft: 8,
