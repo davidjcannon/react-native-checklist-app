@@ -36,7 +36,8 @@ export default class App extends React.Component {
         </Modal>
 
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => this.toggleSettingsModal()}>
+            <TouchableOpacity
+            onPress={() => this.toggleSettingsModal()}>
               <Feather name="menu" size={40} color="white" />
             </TouchableOpacity>
             <Text style={styles.title}>Checklist</Text>

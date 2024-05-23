@@ -16,7 +16,8 @@
     "@expo/vector-icons": "^14.0.0",
     "react-native-paper": "4.9.2",
     "expo-linear-gradient": "~13.0.2",
-    "react-native-linear-gradient": "*"
+    "react-native-linear-gradient": "*",
+    "@react-native-async-storage/async-storage": "1.23.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
