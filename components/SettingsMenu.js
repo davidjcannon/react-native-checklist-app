@@ -45,11 +45,12 @@ export default class SettingsModal extends React.Component {
   }
 
   saveBackground = async () => {
-    console.log('Ran');
     const { color } = this.state;
     try {
+      const savedColor = await AsyncStorage.getItem('backgroundColor');
+      console.log('Color was ', savedColor);
       await AsyncStorage.setItem('backgroundColor', color);
-      console.log('Saved color successfully: ', color);
+      console.log('Changed background color successfully: ', color);
     } catch (error) {
       console.log('Error saving background color:', error);
     }
@@ -67,10 +68,14 @@ export default class SettingsModal extends React.Component {
   renderColors() {
     return this.colorSelection.map((color) => {
       return (
-         <TouchableOpacity
+        <TouchableOpacity
           key={color}
           style={[styles.colorButton, { backgroundColor: color }]}
-          onPress={() => this.saveBackground()}
+          onPress={() => {
+            this.setState({ color }); // Update state with the selected color
+            this.props.updateBackgroundColor(color); // Update background color in App component
+            this.saveBackground(); // Optionally save the selected color
+          }}
         />
       );
     });

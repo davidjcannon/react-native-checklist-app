@@ -14,30 +14,69 @@ import tempData from './tempData';
 import TodoList from './components/TodoList';
 import { LinearGradient } from 'expo-linear-gradient';
 import SettingsModal from './components/SettingsMenu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Color } from 'color';
 
 export default class App extends React.Component {
   state = {
     settingsVisible: false,
+    backgroundColor: '#4158D0',
   };
 
   toggleSettingsModal() {
     this.setState({ settingsVisible: !this.state.settingsVisible });
   }
+  
+  updateBackgroundColor = (color) => {
+  this.setState({ backgroundColor: color });
+};
+
+  async componentDidMount() {
+    try {
+      const savedColor = await AsyncStorage.getItem('backgroundColor');
+      if (savedColor !== null) {
+        this.setState({ backgroundColor: savedColor });
+      }
+    } catch (error) {
+      console.log('Error retrieving saved color:', error);
+    }
+  }
+
+  changeHexColor(c1, operation, c2) {
+    const hex1 = parseInt(c1.replace('#', ''), 16);
+    const hex2 = parseInt(c2, 16);
+    let result;
+    if (operation === '+') {
+      result = hex1 + hex2;
+    } else if (operation === '-') {
+      result = hex1 - hex2;
+    } else {
+      throw new Error('Invalid operation. Use "+" or "-".');
+    }
+    const clampedResult = Math.min(Math.max(0, result), 0xffffff); // Clamp the result to valid range
+    return '#' + clampedResult.toString(16).padStart(6, '0'); // Convert back to hexadecimal
+  }
 
   render() {
+    const { backgroundColor } = this.state;
+    const color2 = this.changeHexColor(backgroundColor, '+', '4FEBC');
+    const color3 = this.changeHexColor(backgroundColor, '-', '39396B');
+
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
-        <Modal
-        animationType="slide"
-        visible={this.state.settingsVisible}
-        onRequestClose={() => this.toggleSettingsModal}>
-        <SettingsModal closeModal={() => this.toggleSettingsModal()} />
-        </Modal>
+          <Modal
+            animationType="slide"
+            visible={this.state.settingsVisible}
+            onRequestClose={() => this.toggleSettingsModal}>
+            <SettingsModal
+              closeModal={() => this.toggleSettingsModal()}
+              updateBackgroundColor={this.updateBackgroundColor}
+            />
+          </Modal>
 
           <View style={styles.header}>
-            <TouchableOpacity
-            onPress={() => this.toggleSettingsModal()}>
+            <TouchableOpacity onPress={() => this.toggleSettingsModal()}>
               <Feather name="menu" size={40} color="white" />
             </TouchableOpacity>
             <Text style={styles.title}>Checklist</Text>
@@ -51,15 +90,14 @@ export default class App extends React.Component {
               renderItem={({ item }) => <TodoList list={item} />}
             />
           </View>
-
         </View>
         <View style={styles.addItem}>
-        <Feather name="plus" size={22} color="black" />
-        <Text style={styles.addItemText}>Add Item</Text>
+          <Feather name="plus" size={22} color="black" />
+          <Text style={styles.addItemText}>Add Item</Text>
         </View>
 
         <LinearGradient
-          colors={['#4158D0', '#46578C', '#081F65']}
+          colors={[backgroundColor, color2, color3]}
           style={styles.grad}
         />
       </SafeAreaView>
@@ -73,7 +111,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  content: { // All content, needed for gradient 
+  content: {
+    // All content, needed for gradient
     flex: 1,
     position: 'relative',
     zIndex: 1,
