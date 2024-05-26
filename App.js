@@ -17,25 +17,37 @@ import SettingsModal from './components/SettingsMenu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import tinycolor from 'tinycolor2';
 
+const DEFAULT_BACKGROUND_COLOR = '#4158D0';
+
 export default class App extends React.Component {
   state = {
     settingsVisible: false,
-    backgroundColor: '#4158D0',
+    backgroundColor: DEFAULT_BACKGROUND_COLOR,
   };
 
+  // Toggles the settings modal
   toggleSettingsModal() {
     this.setState({ settingsVisible: !this.state.settingsVisible });
   }
 
+  // Updates background color to the given color
   updateBackgroundColor = (color) => {
-    this.setState({ backgroundColor: color });
+    // If the color is null, use the default background color
+    // Mostly here for when you reset your data
+    if (color != null) {
+      this.setState({ backgroundColor: color });
+    } else {
+      this.setState({ backgroundColor: DEFAULT_BACKGROUND_COLOR });
+    }
   };
 
+  // Runs the first time the application starts
   async componentDidMount() {
+    // Searches for background color in AsyncStorage
     try {
-      const savedColor = await AsyncStorage.getItem('backgroundColor');
-      if (savedColor !== null) {
-        this.setState({ backgroundColor: savedColor });
+      const color = await AsyncStorage.getItem('backgroundColor');
+      if (color !== null) {
+        this.setState({ backgroundColor: color });
       }
     } catch (error) {
       console.log('Error retrieving saved color:', error);
@@ -43,7 +55,7 @@ export default class App extends React.Component {
   }
 
   adjustBrightness(hex, factor) {
-    // Gets the color based off the hex value
+    // Gets the color based off the hex value using tinycolor2 library
     const color = tinycolor(hex);
     // Brighten/darken the given color using tinycolor2
     const newColor = color.brighten(factor);
@@ -53,12 +65,11 @@ export default class App extends React.Component {
 
   render() {
     const { backgroundColor } = this.state;
-    const color2 = this.adjustBrightness(backgroundColor, -5);
-    const color3 = this.adjustBrightness(backgroundColor, -30);
 
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
+          {/* Settings Modal */}
           <Modal
             animationType="slide"
             visible={this.state.settingsVisible}
@@ -69,13 +80,15 @@ export default class App extends React.Component {
             />
           </Modal>
 
+          {/* Header (Contains menu & checklist title) */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => this.toggleSettingsModal()}>
-              <Feather name="menu" size={40} color="white" />
-            </TouchableOpacity>
             <Text style={styles.title}>Checklist</Text>
+            <TouchableOpacity onPress={() => this.toggleSettingsModal()}>
+              <Feather name="menu" size={64} color="white" />
+            </TouchableOpacity>
           </View>
 
+          {/* Task container */}
           <View style={styles.tasks}>
             <FlatList
               data={tempData}
@@ -85,13 +98,20 @@ export default class App extends React.Component {
             />
           </View>
         </View>
+
+        {/* Add Category button (Hovers above everything) */}
         <View style={styles.addItem}>
           <Feather name="plus" size={22} color="black" />
-          <Text style={styles.addItemText}>Add Item</Text>
+          <Text style={styles.addItemText}>Add Category</Text>
         </View>
 
+        {/* Gradient Background */}
         <LinearGradient
-          colors={[backgroundColor, color2, color3]}
+          colors={[
+            backgroundColor,
+            this.adjustBrightness(backgroundColor, -5),
+            this.adjustBrightness(backgroundColor, -30),
+          ]}
           style={styles.grad}
         />
       </SafeAreaView>
@@ -106,7 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   content: {
-    // All content, needed for gradient
+    // All content that needs to be placed on top of the gradient
     flex: 1,
     position: 'relative',
     zIndex: 1,
@@ -114,7 +134,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 8,
-    verticalAlign: 'top',
   },
   tasks: {
     paddingHorizontal: 16,
@@ -137,13 +156,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'center',
     borderRadius: 40,
-    width: '140px',
-    height: '38px',
-    marginBottom: '24px',
+    width: 160,
+    height: 38,
+    marginBottom: 24,
   },
   addItemText: {
     fontWeight: 'bold',
-    paddingLeft: '10px',
+    paddingLeft: 10,
   },
   grad: {
     ...StyleSheet.absoluteFillObject, // Position the gradient to cover the entire screen

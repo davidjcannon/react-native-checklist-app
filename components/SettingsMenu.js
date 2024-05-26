@@ -9,7 +9,10 @@ import {
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const debug = false;
+
 export default class SettingsModal extends React.Component {
+  // Color selection array for choosing your background color
   colorSelection = [
     '#5CD859',
     '#24A6D9',
@@ -20,44 +23,39 @@ export default class SettingsModal extends React.Component {
     '#D88559',
   ];
 
-  state = {
-    color: this.colorSelection[0],
-  };
-
-  async componentDidMount() {
-    // Retrieve saved color from AsyncStorage when component mounts
-    try {
-      const savedColor = await AsyncStorage.getItem('backgroundColor');
-      if (savedColor !== null) {
-        this.setState({ color: savedColor });
-      }
-    } catch (error) {
-      console.log('Error retrieving saved color:', error);
-    }
-  }
-
+  // Save background color in AsyncStorage
   saveBackground = async () => {
+    // Defines color based on current state of the color pressed
     const { color } = this.state;
     try {
-      const savedColor = await AsyncStorage.getItem('backgroundColor');
-      console.log('Color was ', savedColor);
+      // If debug is on, tries to find the background color from AsyncStorage so that it can be logged
+      if (debug == true) {
+        const savedColor = await AsyncStorage.getItem('backgroundColor');
+        console.log('Color was ', savedColor);
+      }
+      // Save background color in AsyncStorage
       await AsyncStorage.setItem('backgroundColor', color);
       console.log('Changed background color successfully: ', color);
     } catch (error) {
-      console.log('Error saving background color:', error);
+      console.log('Error saving background color: ', error);
     }
   };
 
+  // Clear AsyncStorage data
   resetData = async () => {
     try {
       await AsyncStorage.clear();
       console.log('Successfully cleared all data');
     } catch (error) {
-      console.log('Error clearing data background color:', error);
+      console.log('Error clearing data: ', error);
     }
+    // Update background color back to default after clearing
+    this.props.updateBackgroundColor(null);
   };
 
+  // Render color buttons based of color selection
   renderColors() {
+    // Iterates over array of colors and makes them a TouchableOpacity button
     return this.colorSelection.map((color) => {
       return (
         <TouchableOpacity
@@ -65,8 +63,9 @@ export default class SettingsModal extends React.Component {
           style={[styles.colorButton, { backgroundColor: color }]}
           onPress={() => {
             this.setState({ color }, () => {
-              this.props.updateBackgroundColor(color); // Update background color in App component
+              this.props.updateBackgroundColor(color); // Update the background color in App.js
               this.saveBackground(); // Save the selected color after state has been updated
+              this.props.closeModal(); // Close modal and return to main page
             });
           }}
         />
@@ -77,22 +76,28 @@ export default class SettingsModal extends React.Component {
   render() {
     return (
       <SafeAreaView style={styles.container} behavior="padding">
+        {/* Header (Contains title & x button) */}
         <View style={styles.header}>
+          <Text style={styles.header}>Settings</Text>
           <TouchableOpacity
             style={styles.close}
             onPress={this.props.closeModal}>
-            <Feather name="x" size={32} color="black" />
+            <Feather name="x" size={48} color="white" />
           </TouchableOpacity>
         </View>
         <View style={styles.content}>
-          <Text style={styles.header}>Settings</Text>
           <Text style={styles.setting}>Background Color</Text>
 
           <View style={styles.backgroundSelect} onPress={this.saveBackground}>
             {this.renderColors()}
           </View>
 
-          <TouchableOpacity style={styles.resetButton} onPress={this.resetData}>
+          <TouchableOpacity
+            style={styles.resetButton}
+            onPress={() => {
+              this.resetData();
+              this.props.closeModal();
+            }}>
             <Text style={{ color: 'white' }}>Clear all data</Text>
           </TouchableOpacity>
         </View>
@@ -108,16 +113,16 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
     color: 'white',
-    fontSize: 32,
+    fontSize: 48,
     fontWeight: 'bold',
-    textAlign: 'center',
-    margin: '20px',
   },
   close: {
-    paddingRight: 8,
+    position: 'absolute',
+    right: 24,
+    top: 8,
   },
   setting: {
     color: 'white',
@@ -128,9 +133,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   colorButton: {
-    height: 30,
-    width: 30,
+    height: 48,
+    width: 48,
     borderRadius: 4,
+    marginRight: 10,
   },
   backgroundSelect: {
     width: '100%',
@@ -140,9 +146,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   resetButton: {
-    width: '80%',
-    height: 40,
-    marginTop: 12,
+    width: '60%',
+    height: 50,
+    marginTop: 24,
     backgroundColor: '#D85963',
     justifyContent: 'center',
     alignItems: 'center',
