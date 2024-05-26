@@ -13,7 +13,7 @@ export default class SettingsModal extends React.Component {
   colorSelection = [
     '#5CD859',
     '#24A6D9',
-    '#595BD9',
+    '#4158D0',
     '#802209',
     '#D159D8',
     '#D85963',
@@ -23,14 +23,6 @@ export default class SettingsModal extends React.Component {
   state = {
     color: this.colorSelection[0],
   };
-
-  /*saveBackground = () => {
-    const { color } = this.state;
-
-    backgroundColor.push({ color });
-
-    this.props.closeModal();
-  };*/
 
   async componentDidMount() {
     // Retrieve saved color from AsyncStorage when component mounts
@@ -72,9 +64,10 @@ export default class SettingsModal extends React.Component {
           key={color}
           style={[styles.colorButton, { backgroundColor: color }]}
           onPress={() => {
-            this.setState({ color }); // Update state with the selected color
-            this.props.updateBackgroundColor(color); // Update background color in App component
-            this.saveBackground(); // Optionally save the selected color
+            this.setState({ color }, () => {
+              this.props.updateBackgroundColor(color); // Update background color in App component
+              this.saveBackground(); // Save the selected color after state has been updated
+            });
           }}
         />
       );

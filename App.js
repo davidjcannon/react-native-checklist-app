@@ -15,7 +15,7 @@ import TodoList from './components/TodoList';
 import { LinearGradient } from 'expo-linear-gradient';
 import SettingsModal from './components/SettingsMenu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Color } from 'color';
+import tinycolor from 'tinycolor2';
 
 export default class App extends React.Component {
   state = {
@@ -26,10 +26,10 @@ export default class App extends React.Component {
   toggleSettingsModal() {
     this.setState({ settingsVisible: !this.state.settingsVisible });
   }
-  
+
   updateBackgroundColor = (color) => {
-  this.setState({ backgroundColor: color });
-};
+    this.setState({ backgroundColor: color });
+  };
 
   async componentDidMount() {
     try {
@@ -42,25 +42,19 @@ export default class App extends React.Component {
     }
   }
 
-  changeHexColor(c1, operation, c2) {
-    const hex1 = parseInt(c1.replace('#', ''), 16);
-    const hex2 = parseInt(c2, 16);
-    let result;
-    if (operation === '+') {
-      result = hex1 + hex2;
-    } else if (operation === '-') {
-      result = hex1 - hex2;
-    } else {
-      throw new Error('Invalid operation. Use "+" or "-".');
-    }
-    const clampedResult = Math.min(Math.max(0, result), 0xffffff); // Clamp the result to valid range
-    return '#' + clampedResult.toString(16).padStart(6, '0'); // Convert back to hexadecimal
+  adjustBrightness(hex, factor) {
+    // Gets the color based off the hex value
+    const color = tinycolor(hex);
+    // Brighten/darken the given color using tinycolor2
+    const newColor = color.brighten(factor);
+    // Converts back to a hex value
+    return newColor.toHexString();
   }
 
   render() {
     const { backgroundColor } = this.state;
-    const color2 = this.changeHexColor(backgroundColor, '+', '4FEBC');
-    const color3 = this.changeHexColor(backgroundColor, '-', '39396B');
+    const color2 = this.adjustBrightness(backgroundColor, -5);
+    const color3 = this.adjustBrightness(backgroundColor, -30);
 
     return (
       <SafeAreaView style={styles.container}>
