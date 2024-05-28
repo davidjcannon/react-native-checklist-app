@@ -100,20 +100,27 @@ export default class App extends React.Component {
         </View>
 
         {/* Add Category button (Hovers above everything) */}
-        <View style={styles.addItem}>
+        <TouchableOpacity style={styles.addItem}>
           <Feather name="plus" size={22} color="black" />
           <Text style={styles.addItemText}>Add Category</Text>
-        </View>
+        </TouchableOpacity>
 
-        {/* Gradient Background */}
-        <LinearGradient
-          colors={[
-            backgroundColor,
-            this.adjustBrightness(backgroundColor, -5),
-            this.adjustBrightness(backgroundColor, -30),
-          ]}
-          style={styles.grad}
-        />
+        {/* Gradient Background #7F1DD0 */}
+        {backgroundColor === '#7F1DD0' ? (
+          <LinearGradient
+            colors={['#C40809', '#2503FD', '#632599']}
+            style={styles.grad}
+          />
+        ) : (
+          <LinearGradient
+            colors={[
+              backgroundColor,
+              this.adjustBrightness(backgroundColor, -5),
+              this.adjustBrightness(backgroundColor, -30),
+            ]}
+            style={styles.grad}
+          />
+        )}
       </SafeAreaView>
     );
   }

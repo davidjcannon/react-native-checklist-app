@@ -14,13 +14,13 @@ const debug = false;
 export default class SettingsModal extends React.Component {
   // Color selection array for choosing your background color
   colorSelection = [
-    '#5CD859',
-    '#24A6D9',
-    '#4158D0',
-    '#802209',
-    '#D159D8',
-    '#D85963',
-    '#D88559',
+    '#24A6D9', // Green
+    '#6078EA', // Water
+    '#4158D0', // Default Dark Blue
+    '#632599', // Purple
+    '#7F1DD0', // Custom
+    '#D85963', // Light Red
+    '#99290B', // Red
   ];
 
   // Save background color in AsyncStorage
@@ -86,12 +86,13 @@ export default class SettingsModal extends React.Component {
           </TouchableOpacity>
         </View>
         <View style={styles.content}>
+          {/* Color Selection */}
           <Text style={styles.setting}>Background Color</Text>
-
           <View style={styles.backgroundSelect} onPress={this.saveBackground}>
             {this.renderColors()}
           </View>
 
+          {/* Reset Button */}
           <TouchableOpacity
             style={styles.resetButton}
             onPress={() => {
@@ -133,8 +134,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   colorButton: {
-    height: 48,
-    width: 48,
+    // Fix the settings menu
+    height: 40,
+    width: 40,
     borderRadius: 4,
     marginRight: 10,
   },
