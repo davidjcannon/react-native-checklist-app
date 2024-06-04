@@ -8,12 +8,21 @@ import {
   FlatList,
   KeyboardAvoidingView,
 } from 'react-native';
+import { globalStyles } from '../styles';
 
 export default class TodoList extends React.Component {
   state = {
     name: this.props.list.name,
     color: this.props.list.color,
     todos: this.props.list.todos,
+    // Mount these to something
+    addingTodo: false,
+    newTodoText: '',
+  };
+
+// Adds a checklist item
+    AddTodo = () => {
+    this.setState({ addingTodo: true });
   };
 
   renderTodo = (todo) => {
@@ -24,17 +33,36 @@ export default class TodoList extends React.Component {
         <TouchableOpacity>
           <Feather
             name={todo.completed ? 'check-square' : 'square'}
-            style={styles.icon}
+            style={globalStyles.icon}
           />
         </TouchableOpacity>
         <Text
-        style={[styles.itemText,
-            {textDecorationLine: todo.completed ? "line-through" : "none"},
-            {opacity: todo.completed ? 0.5 : 1}]} numberOfLines={1}>
+          style={[
+            styles.itemText,
+            { textDecorationLine: todo.completed ? 'line-through' : 'none' },
+            { opacity: todo.completed ? 0.5 : 1 },
+          ]}
+          numberOfLines={1}>
           {todo.title}
         </Text>
       </TouchableOpacity>
     );
+  };
+
+  // Create a new checklist item
+  createTodo = () => {
+    const { name, color } = this.state;
+
+    const list = { name, color };
+
+    this.props.addList(list);
+
+    // Create a new checklist item
+    createTodo = () => {
+      const { name, color } = this.state;
+    };
+
+    this.setState({ name: '' });
   };
 
   render() {
@@ -48,10 +76,10 @@ export default class TodoList extends React.Component {
           <TouchableOpacity>
             <Feather
               name={list.completed ? 'check-square' : 'square'}
-              style={styles.icon}
+              style={globalStyles.icon}
             />
           </TouchableOpacity>
-          <Text style={styles.categoryText} numberOfLines={1}>
+          <Text style={globalStyles.categoryText} numberOfLines={1}>
             {list.name}
           </Text>
         </TouchableOpacity>
@@ -75,29 +103,17 @@ export default class TodoList extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
+    container: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 40,
     marginBottom: 5,
     borderRadius: 10,
   },
-  categoryText: {
-    paddingLeft: 6,
-    fontSize: 24,
-    fontWeight: '600',
-    paddingBottom: 4,
-  },
   itemText: {
     paddingLeft: 6,
     fontSize: 16,
     paddingBottom: 4,
-  },
-  icon: {
-    fontSize: 26,
-    color: 'black',
-    paddingLeft: 6,
-    opacity: 1,
   },
   addItem: {
     flexDirection: 'row',
@@ -111,5 +127,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingBottom: 2,
     paddingLeft: 2,
-  },
+  }
 });

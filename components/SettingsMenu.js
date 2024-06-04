@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     height: 40,
     width: 40,
     borderRadius: 4,
-    marginRight: 10,
+    marginRight: 2,
   },
   backgroundSelect: {
     width: '100%',

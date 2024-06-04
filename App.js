@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
+  TextInput,
 } from 'react-native';
 
 import React from 'react';
@@ -16,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import SettingsModal from './components/SettingsMenu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import tinycolor from 'tinycolor2';
+import { globalStyles } from './styles'
 
 const DEFAULT_BACKGROUND_COLOR = '#4158D0';
 
@@ -23,12 +25,20 @@ export default class App extends React.Component {
   state = {
     settingsVisible: false,
     backgroundColor: DEFAULT_BACKGROUND_COLOR,
+    lists: tempData,
+    addingCategory: false,
+    newCatText: '',
   };
 
   // Toggles the settings modal
   toggleSettingsModal() {
     this.setState({ settingsVisible: !this.state.settingsVisible });
   }
+
+  // Determines whether or not a new category is being added
+  AddCat = () => {
+    this.setState({ addingTodo: true });
+  };
 
   // Updates background color to the given color
   updateBackgroundColor = (color) => {
@@ -63,6 +73,16 @@ export default class App extends React.Component {
     return newColor.toHexString();
   }
 
+  // Adds a new category
+  addList = (list) => {
+    this.setState({
+      lists: [
+        ...this.state.lists,
+        { ...list, id: this.state.lists.length + 1, todos: [] },
+      ],
+    });
+  };
+
   render() {
     const { backgroundColor } = this.state;
 
@@ -88,10 +108,24 @@ export default class App extends React.Component {
             </TouchableOpacity>
           </View>
 
+          {/* Enter new category */}
+          {this.state.addingTodo && (
+            <View style={styles.categoryInput}>
+              <Feather name="square" style={globalStyles.icon} />
+              <TextInput
+                style={globalStyles.categoryText}
+                placeholder="Enter category name..."
+                value={this.state.newTodoText}
+                onChangeText={(text) => this.setState({ newTodoText: text })}
+                onSubmitEditing={this.handleSaveTodo}
+              />
+            </View>
+          )}
+
           {/* Task container */}
           <View style={styles.tasks}>
             <FlatList
-              data={tempData}
+              data={this.state.lists}
               keyExtractor={(item) => item.name}
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => <TodoList list={item} />}
@@ -100,10 +134,15 @@ export default class App extends React.Component {
         </View>
 
         {/* Add Category button (Hovers above everything) */}
-        <TouchableOpacity style={styles.addItem}>
-          <Feather name="plus" size={22} color="black" />
-          <Text style={styles.addItemText}>Add Category</Text>
-        </TouchableOpacity>
+        {!this.state.addingTodo && (
+          <TouchableOpacity
+            style={styles.addCategory}
+            addList={this.addList}
+            onPress={this.AddCat}>
+            <Feather name="plus" size={22} color="black" />
+            <Text style={styles.addCatText}>Add Category</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Gradient Background #7F1DD0 */}
         {backgroundColor === '#7F1DD0' ? (
@@ -154,7 +193,7 @@ const styles = StyleSheet.create({
     color: '#ffff',
     paddingBottom: 5,
   },
-  addItem: {
+  addCategory: {
     display: 'flex',
     flexDirection: 'row',
     backgroundColor: 'white',
@@ -167,9 +206,14 @@ const styles = StyleSheet.create({
     height: 38,
     marginBottom: 24,
   },
-  addItemText: {
-    fontWeight: 'bold',
-    paddingLeft: 10,
+  categoryInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    height: 40,
+    marginBottom: 5,
+    borderRadius: 10,
+    marginHorizontal: 16,
   },
   grad: {
     ...StyleSheet.absoluteFillObject, // Position the gradient to cover the entire screen
