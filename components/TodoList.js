@@ -53,14 +53,11 @@ export default class TodoList extends React.Component {
   createTodo = () => {
     const { name, color } = this.state;
 
-    const list = { name, color };
-
-    this.props.addList(list);
-
-    // Create a new checklist item
-    createTodo = () => {
-      const { name, color } = this.state;
-    };
+    tempData.push({
+      name,
+      color,
+      todos: []
+    })
 
     this.setState({ name: '' });
   };

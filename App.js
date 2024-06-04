@@ -17,7 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import SettingsModal from './components/SettingsMenu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import tinycolor from 'tinycolor2';
-import { globalStyles } from './styles'
+import { globalStyles } from './styles';
 
 const DEFAULT_BACKGROUND_COLOR = '#4158D0';
 
@@ -27,7 +27,7 @@ export default class App extends React.Component {
     backgroundColor: DEFAULT_BACKGROUND_COLOR,
     lists: tempData,
     addingCategory: false,
-    newCatText: '',
+    newCategoryText: '',
   };
 
   // Toggles the settings modal
@@ -37,7 +37,21 @@ export default class App extends React.Component {
 
   // Determines whether or not a new category is being added
   AddCat = () => {
-    this.setState({ addingTodo: true });
+    this.setState({ addingCategory: true });
+  };
+
+  // Create a new checklist item
+  createCategory = () => {
+    const { newCategoryText } = this.state;
+
+    tempData.push({
+      name: newCategoryText,
+      color: '#FFFFFF',
+      todos: [],
+    });
+
+    this.setState({ newCategoryText: '' });
+    this.setState({ addingCategory: false });
   };
 
   // Updates background color to the given color
@@ -108,16 +122,18 @@ export default class App extends React.Component {
             </TouchableOpacity>
           </View>
 
-          {/* Enter new category */}
-          {this.state.addingTodo && (
+          {/* Adding new category box */}
+          {this.state.addingCategory && (
             <View style={styles.categoryInput}>
               <Feather name="square" style={globalStyles.icon} />
               <TextInput
                 style={globalStyles.categoryText}
-                placeholder="Enter category name..."
-                value={this.state.newTodoText}
-                onChangeText={(text) => this.setState({ newTodoText: text })}
-                onSubmitEditing={this.handleSaveTodo}
+                placeholder="Category name..."
+                value={this.state.newCategoryText}
+                onChangeText={(text) =>
+                  this.setState({ newCategoryText: text })
+                }
+                onSubmitEditing={this.createCategory}
               />
             </View>
           )}
@@ -134,7 +150,7 @@ export default class App extends React.Component {
         </View>
 
         {/* Add Category button (Hovers above everything) */}
-        {!this.state.addingTodo && (
+        {!this.state.addingCategory && (
           <TouchableOpacity
             style={styles.addCategory}
             addList={this.addList}
