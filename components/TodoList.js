@@ -93,7 +93,7 @@ export default class TodoList extends React.Component {
 
           {/* Adding new checklist item box */}
           {this.state.addingTodo ? (
-            <View
+            <KeyboardAvoidingView
               style={[
                 styles.container,
                 { backgroundColor: `${list.color}40` },
@@ -108,7 +108,7 @@ export default class TodoList extends React.Component {
                 }
                 onSubmitEditing={this.createTodo}
               />
-            </View>
+            </KeyboardAvoidingView>
           ) : (
             // Add Button
             <TouchableOpacity
