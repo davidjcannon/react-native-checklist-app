@@ -7,6 +7,7 @@ import {
   FlatList,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import React from 'react';
@@ -35,8 +36,8 @@ export default class App extends React.Component {
     this.setState({ settingsVisible: !this.state.settingsVisible });
   }
 
-  // Determines whether or not a new category is being added
-  AddCat = () => {
+  // Makes the adding category text box appear when "Add Category" is clicked
+  AddCategory = () => {
     this.setState({ addingCategory: true });
   };
 
@@ -44,12 +45,14 @@ export default class App extends React.Component {
   createCategory = () => {
     const { newCategoryText } = this.state;
 
+    // Stores temp data, will not be remembered
     tempData.push({
       name: newCategoryText,
       color: '#FFFFFF',
       todos: [],
     });
 
+    // Makes add category box disappear and returns text to default
     this.setState({ newCategoryText: '' });
     this.setState({ addingCategory: false });
   };
@@ -124,7 +127,7 @@ export default class App extends React.Component {
 
           {/* Adding new category box */}
           {this.state.addingCategory && (
-            <View style={styles.categoryInput}>
+            <KeyboardAvoidingView style={styles.categoryInput}>
               <Feather name="square" style={globalStyles.icon} />
               <TextInput
                 style={globalStyles.categoryText}
@@ -135,7 +138,7 @@ export default class App extends React.Component {
                 }
                 onSubmitEditing={this.createCategory}
               />
-            </View>
+            </KeyboardAvoidingView>
           )}
 
           {/* Task container */}
@@ -154,7 +157,7 @@ export default class App extends React.Component {
           <TouchableOpacity
             style={styles.addCategory}
             addList={this.addList}
-            onPress={this.AddCat}>
+            onPress={this.AddCategory}>
             <Feather name="plus" size={22} color="black" />
             <Text style={styles.addCatText}>Add Category</Text>
           </TouchableOpacity>
