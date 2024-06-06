@@ -6,14 +6,39 @@ import {
   View,
   TouchableOpacity,
   FlatList,
+  TextInput,
   KeyboardAvoidingView,
 } from 'react-native';
+import { globalStyles } from '../styles';
 
 export default class TodoList extends React.Component {
   state = {
     name: this.props.list.name,
     color: this.props.list.color,
     todos: this.props.list.todos,
+    // Mount these to something
+    addingTodo: false,
+    newTodoText: '',
+  };
+
+  // Adds a checklist item
+  AddTodo = () => {
+    this.setState({ addingTodo: true });
+  };
+
+  // Create a new checklist item
+  createTodo = () => {
+    // Figures out what the current todo text is and current todos
+    const { newTodoText, todos } = this.state;
+    // Creates a new Todo array containing the old array and the new title
+    const newTodos = [...todos, { title: newTodoText, completed: false }];
+
+    // Update todos array, return text to default, and disable addingTodo
+    this.setState({
+      todos: newTodos,
+      newTodoText: '',
+      addingTodo: false,
+    });
   };
 
   renderTodo = (todo) => {
@@ -24,13 +49,16 @@ export default class TodoList extends React.Component {
         <TouchableOpacity>
           <Feather
             name={todo.completed ? 'check-square' : 'square'}
-            style={styles.icon}
+            style={globalStyles.icon}
           />
         </TouchableOpacity>
         <Text
-        style={[styles.itemText,
-            {textDecorationLine: todo.completed ? "line-through" : "none"},
-            {opacity: todo.completed ? 0.5 : 1}]} numberOfLines={1}>
+          style={[
+            styles.itemText,
+            { textDecorationLine: todo.completed ? 'line-through' : 'none' },
+            { opacity: todo.completed ? 0.5 : 1 },
+          ]}
+          numberOfLines={1}>
           {todo.title}
         </Text>
       </TouchableOpacity>
@@ -48,10 +76,10 @@ export default class TodoList extends React.Component {
           <TouchableOpacity>
             <Feather
               name={list.completed ? 'check-square' : 'square'}
-              style={styles.icon}
+              style={globalStyles.icon}
             />
           </TouchableOpacity>
-          <Text style={styles.categoryText} numberOfLines={1}>
+          <Text style={globalStyles.categoryText} numberOfLines={1}>
             {list.name}
           </Text>
         </TouchableOpacity>
@@ -62,12 +90,34 @@ export default class TodoList extends React.Component {
             renderItem={({ item }) => this.renderTodo(item)}
             keyExtractor={(item) => item.title}
           />
-          {/* Add Button */}
-          <TouchableOpacity
-            style={[styles.addItem, { backgroundColor: `${list.color}20` }]}>
-            <Feather name="plus" size={22} color="black" />
-            <Text style={styles.addItemText}>Add Checklist Item</Text>
-          </TouchableOpacity>
+
+          {/* Adding new checklist item box */}
+          {this.state.addingTodo ? (
+            <View
+              style={[
+                styles.container,
+                { backgroundColor: `${list.color}40` },
+              ]}>
+              <Feather name="square" style={globalStyles.icon} />
+              <TextInput
+                style={styles.itemText}
+                placeholder="Item name..."
+                value={this.state.newTodoText}
+                onChangeText={(text) =>
+                  this.setState({ newTodoText: text })
+                }
+                onSubmitEditing={this.createTodo}
+              />
+            </View>
+          ) : (
+            // Add Button
+            <TouchableOpacity
+              style={[styles.addItem, { backgroundColor: `${list.color}20` }]}
+              onPress={this.AddTodo}>
+              <Feather name="plus" size={22} color="black" />
+              <Text style={styles.addItemText}>Add Checklist Item</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -82,22 +132,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderRadius: 10,
   },
-  categoryText: {
-    paddingLeft: 6,
-    fontSize: 24,
-    fontWeight: '600',
-    paddingBottom: 4,
-  },
   itemText: {
     paddingLeft: 6,
     fontSize: 16,
     paddingBottom: 4,
-  },
-  icon: {
-    fontSize: 26,
-    color: 'black',
-    paddingLeft: 6,
-    opacity: 1,
   },
   addItem: {
     flexDirection: 'row',
@@ -111,5 +149,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingBottom: 2,
     paddingLeft: 2,
+  },
+  itemInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 40,
+    marginBottom: 5,
+    borderRadius: 10,
+    marginHorizontal: 16,
   },
 });
