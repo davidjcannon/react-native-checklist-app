@@ -7,7 +7,6 @@ import {
   FlatList,
   Modal,
   TextInput,
-  KeyboardAvoidingView,
 } from 'react-native';
 
 import React from 'react';
@@ -23,6 +22,8 @@ import { globalStyles } from './styles';
 const DEFAULT_BACKGROUND_COLOR = '#4158D0';
 
 export default class App extends React.Component {
+  textFocus = React.createRef();
+
   state = {
     settingsVisible: false,
     backgroundColor: DEFAULT_BACKGROUND_COLOR,
@@ -38,19 +39,19 @@ export default class App extends React.Component {
 
   // Makes the adding category text box appear when "Add Category" is clicked
   AddCategory = () => {
-    this.setState({ addingCategory: true });
+    this.setState({ addingCategory: true }, () => {
+      this.textFocus.current.focus(); // Focus the TextInput
+    });
   };
 
   // Create a new checklist item
   createCategory = () => {
     const { newCategoryText } = this.state;
+    const color = '#FFFFFF';
 
-    // Stores temp data, will not be remembered
-    tempData.push({
-      name: newCategoryText,
-      color: '#FFFFFF',
-      todos: [],
-    });
+    const list = { name: newCategoryText, color: '#FFFFFF', opened: true };
+
+    this.addList(list);
 
     // Makes add category box disappear and returns text to default
     this.setState({ newCategoryText: '' });
@@ -90,13 +91,31 @@ export default class App extends React.Component {
     return newColor.toHexString();
   }
 
+  renderList = (list) => {
+    return (
+      <TodoList
+        textFocus={this.textFocus}
+        list={list}
+        updateList={this.updateList}
+      />
+    );
+  };
+
   // Adds a new category
   addList = (list) => {
     this.setState({
       lists: [
-        ...this.state.lists,
         { ...list, id: this.state.lists.length + 1, todos: [] },
+        ...this.state.lists,
       ],
+    });
+  };
+
+  updateList = (list) => {
+    this.setState({
+      lists: this.state.lists.map((item) => {
+        return item.id === list.id ? list : item;
+      }),
     });
   };
 
@@ -127,27 +146,31 @@ export default class App extends React.Component {
 
           {/* Adding new category box */}
           {this.state.addingCategory && (
-            <KeyboardAvoidingView style={styles.categoryInput}>
+            <View style={styles.categoryInput}>
               <Feather name="square" style={globalStyles.icon} />
               <TextInput
+                // Allows the text input to auto focus
+                ref={this.textFocus}
                 style={globalStyles.categoryText}
                 placeholder="Category name..."
+                placeholderTextColor="black"
                 value={this.state.newCategoryText}
                 onChangeText={(text) =>
                   this.setState({ newCategoryText: text })
                 }
                 onSubmitEditing={this.createCategory}
               />
-            </KeyboardAvoidingView>
+            </View>
           )}
-
           {/* Task container */}
           <View style={styles.tasks}>
             <FlatList
               data={this.state.lists}
               keyExtractor={(item) => item.name}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => <TodoList list={item} />}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => this.renderList(item)}
+              // Adds a margin below all of the categories, set this to 120 to perfectly fit
+              ListFooterComponent={<View style={{ height: 360 }} />}
             />
           </View>
         </View>
@@ -156,7 +179,6 @@ export default class App extends React.Component {
         {!this.state.addingCategory && (
           <TouchableOpacity
             style={styles.addCategory}
-            addList={this.addList}
             onPress={this.AddCategory}>
             <Feather name="plus" size={22} color="black" />
             <Text style={styles.addCatText}>Add Category</Text>

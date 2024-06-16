@@ -1,5 +1,6 @@
 export default tempData = [
   {
+    id: 1,
     name: "Tutorial",
     color: '#FFFFFF',
     opened: true,
@@ -20,6 +21,7 @@ export default tempData = [
     ]
   },
   {
+    id: 2,
     name: "Before you leave",
     color: '#FFFFFF',
     opened: true,
@@ -43,6 +45,35 @@ export default tempData = [
       },
       {
         title: "Brush",
+        completed: false
+      },
+    ]
+  },
+  {
+    id: 3,
+    name: "Groceries",
+    color: '#FFFFFF',
+    opened: false,
+    completed: false,
+    todos: [
+      {
+        title: "Milk",
+        completed: false
+      },
+      {
+        title: "Eggs",
+        completed: false
+      },
+      {
+        title: "Cereal",
+        completed: false
+      },
+      {
+        title: "Cheese",
+        completed: false
+      },
+      {
+        title: "Water",
         completed: false
       },
     ]
