@@ -12,5 +12,7 @@ export const globalStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     paddingBottom: 4,
+    outlineStyle: 'none',
+    width: '85%',
   },
 });
