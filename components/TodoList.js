@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
   TextInput,
+  Keyboard
 } from 'react-native';
 import { globalStyles } from '../styles';
 
@@ -22,6 +23,8 @@ export default class TodoList extends React.Component {
     this.setState({ addingTodo: true }, () => {
       this.props.textFocus.current.focus(); // Accessing the ref from props
     });
+
+    Keyboard.dismiss();
   };
 
   // Create a new checklist item
@@ -43,17 +46,37 @@ export default class TodoList extends React.Component {
     let list = this.props.list;
     list.todos[index].completed = !list.todos[index].completed;
 
+    // When making a checklist item off, check if all others are true, if so check category
+    if (this.props.list.todos.every((task) => task.completed)) {
+      this.props.list.completed = true;
+    }
+
+    // If you make a checklist item false, make checklist category false too
+    if (list.todos[index].completed == false) {
+      this.props.list.completed = false;
+    }
+
+    // Save changes to the list
     this.props.updateList(list);
   };
 
   // Toggles the whole checklist category completed or not
-  toggleCategoryCompleted = (index) => {
-    let list = this.props.list;
-    list.todos[index].completed = !list.todos[index].completed;
+  toggleCategoryCompleted = () => {
+    const updatedList = {
+      // Toggles the category button specifically
+      ...this.props.list,
+      completed: !this.props.list.completed,
+      // Goes into the categories todos and sets them all to the same condition as the category button
+      todos: this.props.list.todos.map((task) => ({
+        ...task,
+        completed: !this.props.list.completed,
+      })),
+    };
 
-    this.props.updateList(list);
+    this.props.updateList(updatedList);
   };
 
+  // Allows you to open/close category lists
   toggleListOpened = () => {
     let list = { ...this.props.list };
     list.opened = !list.opened;
@@ -94,7 +117,7 @@ export default class TodoList extends React.Component {
           style={[styles.container, { backgroundColor: list.color }]}
           onPress={this.toggleListOpened}>
           {/* Check/Uncheck Button */}
-          <TouchableOpacity onPress={() => this.toggleCategoryCompleted(index)}>
+          <TouchableOpacity onPress={this.toggleCategoryCompleted}>
             <Feather
               name={list.completed ? 'check-square' : 'square'}
               style={globalStyles.icon}
@@ -127,6 +150,7 @@ export default class TodoList extends React.Component {
                     placeholder="Item name..."
                     placeholderTextColor="black"
                     value={this.state.newTodoText}
+                    maxLength={32}
                     onChangeText={(text) =>
                       this.setState({ newTodoText: text })
                     }
@@ -165,6 +189,8 @@ const styles = StyleSheet.create({
     paddingLeft: 6,
     fontSize: 16,
     paddingBottom: 4,
+    width: '85%',
+    outlineStyle: 'none',
   },
   addItem: {
     flexDirection: 'row',

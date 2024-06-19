@@ -155,6 +155,7 @@ export default class App extends React.Component {
                 placeholder="Category name..."
                 placeholderTextColor="black"
                 value={this.state.newCategoryText}
+                maxLength={20}
                 onChangeText={(text) =>
                   this.setState({ newCategoryText: text })
                 }
@@ -169,6 +170,7 @@ export default class App extends React.Component {
               keyExtractor={(item) => item.name}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => this.renderList(item)}
+              keyboardShouldPersistTaps="always"
               // Adds a margin below all of the categories, set this to 120 to perfectly fit
               ListFooterComponent={<View style={{ height: 360 }} />}
             />
