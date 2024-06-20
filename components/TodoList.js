@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   FlatList,
   TextInput,
-  Keyboard
+  Keyboard,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { globalStyles } from '../styles';
 
 export default class TodoList extends React.Component {
@@ -21,18 +22,19 @@ export default class TodoList extends React.Component {
   // Adds a checklist item
   AddTodo = () => {
     this.setState({ addingTodo: true }, () => {
-      this.props.textFocus.current.focus(); // Accessing the ref from props
+      this.props.textFocus.current.focus();
     });
 
     Keyboard.dismiss();
   };
 
   // Create a new checklist item
-  createTodo = () => {
+  createTodo = async () => {
     let list = this.props.list;
     list.todos.push({ title: this.state.newTodoText, completed: false });
 
     this.props.updateList(list);
+    await this.props.saveList(list);
 
     // Update todos array, return text to default, and disable addingTodo
     this.setState({
@@ -42,7 +44,7 @@ export default class TodoList extends React.Component {
   };
 
   // Toggles whether or not a checklist item is completed or not
-  toggleChecklistCompleted = (index) => {
+  toggleChecklistCompleted = async (index) => {
     let list = this.props.list;
     list.todos[index].completed = !list.todos[index].completed;
 
@@ -58,10 +60,11 @@ export default class TodoList extends React.Component {
 
     // Save changes to the list
     this.props.updateList(list);
+    await this.props.saveList(list);
   };
 
   // Toggles the whole checklist category completed or not
-  toggleCategoryCompleted = () => {
+  toggleCategoryCompleted = async () => {
     const updatedList = {
       // Toggles the category button specifically
       ...this.props.list,
@@ -74,21 +77,24 @@ export default class TodoList extends React.Component {
     };
 
     this.props.updateList(updatedList);
+    await this.props.saveList(list);
   };
 
   // Allows you to open/close category lists
-  toggleListOpened = () => {
+  toggleListOpened = async () => {
     let list = { ...this.props.list };
     list.opened = !list.opened;
 
     this.props.updateList(list);
+    await this.props.saveList(list);
   };
 
   renderTodo = (todo, index) => {
     const list = this.props.list;
     return (
       <TouchableOpacity
-        style={[styles.container, { backgroundColor: `${list.color}40` }]}>
+        style={[styles.container, { backgroundColor: `${list.color}40` }]}
+        onPress={() => this.toggleChecklistCompleted(index)}>
         <TouchableOpacity onPress={() => this.toggleChecklistCompleted(index)}>
           <Feather
             name={todo.completed ? 'check-square' : 'square'}

@@ -35,6 +35,26 @@ export default class App extends React.Component {
   // Toggles the settings modal
   toggleSettingsModal() {
     this.setState({ settingsVisible: !this.state.settingsVisible });
+    if (this.state.settingsVisible == true) {
+      console.log('Closing modal and loading data');
+      this.loadData();
+    }
+  }
+
+  // Runs the first time the application starts
+  async componentDidMount() {
+    this.loadData();
+  }
+
+  // Checks if the previous state is the same as the current state, if so throw an error
+  async componentDidUpdate(_, prevState) {
+    if (prevState.lists !== this.state.lists) {
+      try {
+        await AsyncStorage.setItem('lists', JSON.stringify(this.state.lists));
+      } catch (error) {
+        console.log('Error saving lists:', error);
+      }
+    }
   }
 
   // Makes the adding category text box appear when "Add Category" is clicked
@@ -54,8 +74,7 @@ export default class App extends React.Component {
     this.addList(list);
 
     // Makes add category box disappear and returns text to default
-    this.setState({ newCategoryText: '' });
-    this.setState({ addingCategory: false });
+    this.setState({ newCategoryText: '', addingCategory: false });
   };
 
   // Updates background color to the given color
@@ -68,19 +87,6 @@ export default class App extends React.Component {
       this.setState({ backgroundColor: DEFAULT_BACKGROUND_COLOR });
     }
   };
-
-  // Runs the first time the application starts
-  async componentDidMount() {
-    // Searches for background color in AsyncStorage
-    try {
-      const color = await AsyncStorage.getItem('backgroundColor');
-      if (color !== null) {
-        this.setState({ backgroundColor: color });
-      }
-    } catch (error) {
-      console.log('Error retrieving saved color:', error);
-    }
-  }
 
   adjustBrightness(hex, factor) {
     // Gets the color based off the hex value using tinycolor2 library
@@ -97,6 +103,7 @@ export default class App extends React.Component {
         textFocus={this.textFocus}
         list={list}
         updateList={this.updateList}
+        saveList={this.saveList}
       />
     );
   };
@@ -119,6 +126,36 @@ export default class App extends React.Component {
     });
   };
 
+  loadData = async () => {
+    try {
+      // Searches for background color
+      const color = await AsyncStorage.getItem('backgroundColor');
+      if (color !== null) {
+        this.setState({ backgroundColor: color });
+      }
+
+      // Searches for previous list save data
+      const lists = await AsyncStorage.getItem('lists');
+      if (lists !== '[]' && lists !== null) {
+        console.log('Lists from AsyncStorage:', lists);
+        this.setState({ lists: JSON.parse(lists) });
+      } else {
+        console.log('Lists not found');
+        this.setState({ lists: tempData });
+      }
+    } catch (error) {
+      console.log('Error retrieving data:', error);
+    }
+  };
+
+  saveList = async (list) => {
+    try {
+      await AsyncStorage.setItem('lists', JSON.stringify(lists));
+    } catch (error) {
+      console.log('Error saving lists:', error);
+    }
+  };
+
   render() {
     const { backgroundColor } = this.state;
 
@@ -133,6 +170,8 @@ export default class App extends React.Component {
             <SettingsModal
               closeModal={() => this.toggleSettingsModal()}
               updateBackgroundColor={this.updateBackgroundColor}
+              updateList={this.updateList}
+              saveList={this.saveList}
             />
           </Modal>
 
