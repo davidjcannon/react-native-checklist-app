@@ -26,10 +26,10 @@ export default class App extends React.Component {
 
   state = {
     settingsVisible: false,
+    addingCategory: false,
     backgroundColor: DEFAULT_BACKGROUND_COLOR,
     lists: tempData,
-    addingCategory: false,
-    newCategoryText: '',
+    categoryText: '',
   };
 
   // Toggles the settings modal
@@ -66,15 +66,15 @@ export default class App extends React.Component {
 
   // Create a new checklist item
   createCategory = () => {
-    const { newCategoryText } = this.state;
+    const { categoryText } = this.state;
     const color = '#FFFFFF';
 
-    const list = { name: newCategoryText, color: '#FFFFFF', opened: true };
+    const list = { name: categoryText, color: '#FFFFFF', opened: true };
 
     this.addList(list);
 
     // Makes add category box disappear and returns text to default
-    this.setState({ newCategoryText: '', addingCategory: false });
+    this.setState({ categoryText: '', addingCategory: false });
   };
 
   // Updates background color to the given color
@@ -149,11 +149,29 @@ export default class App extends React.Component {
   };
 
   saveList = async (list) => {
-    try {
-      await AsyncStorage.setItem('lists', JSON.stringify(lists));
-    } catch (error) {
-      console.log('Error saving lists:', error);
-    }
+  try {
+    await AsyncStorage.setItem('lists', JSON.stringify(list));
+  } catch (error) {
+    console.log('Error saving lists:', error);
+  }
+};
+
+    renderTextInput = ({ onSubmitEditing, index }) => {
+    return (
+      <View style={styles.categoryInput}>
+        <Feather name="square" style={globalStyles.icon} />
+        <TextInput
+          ref={this.textFocus}
+          style={styles.categoryText}
+          placeholder="Category name..."
+          placeholderTextColor="black"
+          value={this.state.categoryText}
+          maxLength={20}
+          onChangeText={(text) => this.setState({ categoryText: text })}
+          onSubmitEditing={onSubmitEditing}
+        />
+      </View>
+    );
   };
 
   render() {
@@ -185,22 +203,7 @@ export default class App extends React.Component {
 
           {/* Adding new category box */}
           {this.state.addingCategory && (
-            <View style={styles.categoryInput}>
-              <Feather name="square" style={globalStyles.icon} />
-              <TextInput
-                // Allows the text input to auto focus
-                ref={this.textFocus}
-                style={globalStyles.categoryText}
-                placeholder="Category name..."
-                placeholderTextColor="black"
-                value={this.state.newCategoryText}
-                maxLength={20}
-                onChangeText={(text) =>
-                  this.setState({ newCategoryText: text })
-                }
-                onSubmitEditing={this.createCategory}
-              />
-            </View>
+              this.renderTextInput({ onSubmitEditing: this.createCategory })
           )}
           {/* Task container */}
           <View style={styles.tasks}>

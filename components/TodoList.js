@@ -8,15 +8,18 @@ import {
   FlatList,
   TextInput,
   Keyboard,
+  Animated,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { globalStyles } from '../styles';
+import { Swipeable } from 'react-native-gesture-handler';
+import SwipeableItem from './SwipeableItem';
 
 export default class TodoList extends React.Component {
   state = {
     // Mount these to something
     addingTodo: false,
-    newTodoText: '',
+    editingIndex: null,
+    todoText: '',
   };
 
   // Adds a checklist item
@@ -31,16 +34,13 @@ export default class TodoList extends React.Component {
   // Create a new checklist item
   createTodo = async () => {
     let list = this.props.list;
-    list.todos.push({ title: this.state.newTodoText, completed: false });
+    list.todos.push({ title: this.state.todoText, completed: false });
 
     this.props.updateList(list);
     await this.props.saveList(list);
 
     // Update todos array, return text to default, and disable addingTodo
-    this.setState({
-      newTodoText: '',
-      addingTodo: false,
-    });
+    this.setState({ todoText: '', addingTodo: false });
   };
 
   // Toggles whether or not a checklist item is completed or not
@@ -89,28 +89,100 @@ export default class TodoList extends React.Component {
     await this.props.saveList(list);
   };
 
-  renderTodo = (todo, index) => {
+  renderTextInput = ({ onSubmitEditing, index }) => {
     const list = this.props.list;
     return (
-      <TouchableOpacity
-        style={[styles.container, { backgroundColor: `${list.color}40` }]}
-        onPress={() => this.toggleChecklistCompleted(index)}>
-        <TouchableOpacity onPress={() => this.toggleChecklistCompleted(index)}>
-          <Feather
-            name={todo.completed ? 'check-square' : 'square'}
-            style={globalStyles.icon}
-          />
-        </TouchableOpacity>
-        <Text
-          style={[
-            styles.itemText,
-            { textDecorationLine: todo.completed ? 'line-through' : 'none' },
-            { opacity: todo.completed ? 0.5 : 1 },
-          ]}
-          numberOfLines={1}>
-          {todo.title}
-        </Text>
-      </TouchableOpacity>
+      <View style={[styles.container, { backgroundColor: `${list.color}40` }]}>
+        <Feather name="square" style={globalStyles.icon} />
+        <TextInput
+          ref={this.props.textFocus}
+          style={styles.itemText}
+          placeholder="Item name..."
+          placeholderTextColor="black"
+          value={this.state.todoText}
+          maxLength={32}
+          onChangeText={(text) => this.setState({ todoText: text })}
+          onSubmitEditing={onSubmitEditing}
+        />
+      </View>
+    );
+  };
+
+  startEditing = (index, todo) => {
+    this.setState({ editingIndex: index, todoText: todo.title });
+  };
+
+  saveEditedTodo = async () => {
+    let list = this.props.list;
+    const { editingIndex, todoText } = this.state;
+    list.todos[editingIndex].title = todoText;
+
+    this.setState({ editingIndex: null, todoText: '' });
+
+    this.props.updateList(list);
+    await this.props.saveList(list);
+  };
+
+  deleteTodo = async (index) => {
+  console.log("Deleting checklist item: " + index);
+  let list = { ...this.props.list }; // Create a copy of the list object
+
+    // Delete checklist item
+    list.todos.splice(index, 1);
+
+  // Update state and persist changes
+  this.props.updateList(list);
+  await this.props.saveList(list);
+};
+
+deleteCategory = async () => {
+    console.log("Deleting category: " + this.props.list.name);
+    console.log("This has not been added yet");
+  };
+
+  renderTodo = (todo, index) => {
+    const list = this.props.list;
+    const { editingIndex } = this.state;
+    return (
+      <View>
+        {editingIndex === index ? (
+          this.renderTextInput({ onSubmitEditing: this.saveEditedTodo, index: index })
+        ) : (
+          <Swipeable
+            renderRightActions={(_, dragX) => (
+              <SwipeableItem
+                onEdit={() => this.startEditing(index, todo)}
+                onDelete={() => this.deleteTodo(index)}
+              />
+            )}
+          >
+            <TouchableOpacity
+              style={[styles.container, { backgroundColor: `${list.color}40` }]}
+              onPress={() => this.toggleChecklistCompleted(index)}>
+              <TouchableOpacity
+                onPress={() => this.toggleChecklistCompleted(index)}>
+                <Feather
+                  name={todo.completed ? 'check-square' : 'square'}
+                  style={globalStyles.icon}
+                />
+              </TouchableOpacity>
+              <Text
+                style={[
+                  styles.itemText,
+                  {
+                    textDecorationLine: todo.completed
+                      ? 'line-through'
+                      : 'none',
+                  },
+                  { opacity: todo.completed ? 0.5 : 1 },
+                ]}
+                numberOfLines={1}>
+                {todo.title}
+              </Text>
+            </TouchableOpacity>
+          </Swipeable>
+        )}
+      </View>
     );
   };
 
@@ -118,6 +190,18 @@ export default class TodoList extends React.Component {
     const list = this.props.list;
     return (
       <View>
+        
+        {/* Category Swipeable */}
+          <Swipeable
+        renderRightActions={(_, dragX) => (
+          <SwipeableItem
+            onEdit={() => this.startEditing(index, list)}
+            onDelete={() => this.deleteCategory()}
+            isCategory={true}
+          />
+        )}
+      >
+          
         {/* Open/Close Category Button */}
         <TouchableOpacity
           style={[styles.container, { backgroundColor: list.color }]}
@@ -133,6 +217,8 @@ export default class TodoList extends React.Component {
             {list.name}
           </Text>
         </TouchableOpacity>
+        
+          </Swipeable>
         <View>
           {/* Only shows tasks if the current list is open */}
           {list.opened && (
@@ -144,25 +230,7 @@ export default class TodoList extends React.Component {
                 keyExtractor={(item) => item.title}
               />
               {this.state.addingTodo ? (
-                <View
-                  style={[
-                    styles.container,
-                    { backgroundColor: `${list.color}40` },
-                  ]}>
-                  <Feather name="square" style={globalStyles.icon} />
-                  <TextInput
-                    ref={this.props.textFocus}
-                    style={styles.itemText}
-                    placeholder="Item name..."
-                    placeholderTextColor="black"
-                    value={this.state.newTodoText}
-                    maxLength={32}
-                    onChangeText={(text) =>
-                      this.setState({ newTodoText: text })
-                    }
-                    onSubmitEditing={this.createTodo}
-                  />
-                </View>
+                this.renderTextInput({ onSubmitEditing: this.createTodo })
               ) : (
                 // Add Button
                 <TouchableOpacity
@@ -187,7 +255,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 40,
+    height: 46,
     marginBottom: 5,
     borderRadius: 10,
   },
@@ -210,5 +278,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingBottom: 2,
     paddingLeft: 2,
+  },
+  gestures: {
+    flexDirection: 'row',
+  },
+  swipeButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 60,
+    borderRadius: 10,
+    marginBottom: 5,
+    marginLeft: 5,
+    opacity: 1,
   },
 });
