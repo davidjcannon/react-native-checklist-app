@@ -102,8 +102,10 @@ export default class App extends React.Component {
       <TodoList
         textFocus={this.textFocus}
         list={list}
+        lists={this.state.lists}
         updateList={this.updateList}
         saveList={this.saveList}
+        loadData={this.loadData}
       />
     );
   };
@@ -136,7 +138,7 @@ export default class App extends React.Component {
 
       // Searches for previous list save data
       const lists = await AsyncStorage.getItem('lists');
-      if (lists !== '[]' && lists !== null) {
+      if (lists !== null) {
         console.log('Lists from AsyncStorage:', lists);
         this.setState({ lists: JSON.parse(lists) });
       } else {
@@ -149,20 +151,20 @@ export default class App extends React.Component {
   };
 
   saveList = async (list) => {
-  try {
-    await AsyncStorage.setItem('lists', JSON.stringify(list));
-  } catch (error) {
-    console.log('Error saving lists:', error);
-  }
-};
+    try {
+      await AsyncStorage.setItem('lists', JSON.stringify(list));
+    } catch (error) {
+      console.log('Error saving lists:', error);
+    }
+  };
 
-    renderTextInput = ({ onSubmitEditing, index }) => {
+  renderTextInput = ({ onSubmitEditing, index }) => {
     return (
       <View style={styles.categoryInput}>
         <Feather name="square" style={globalStyles.icon} />
         <TextInput
           ref={this.textFocus}
-          style={styles.categoryText}
+          style={globalStyles.categoryText}
           placeholder="Category name..."
           placeholderTextColor="black"
           value={this.state.categoryText}
@@ -202,9 +204,8 @@ export default class App extends React.Component {
           </View>
 
           {/* Adding new category box */}
-          {this.state.addingCategory && (
-              this.renderTextInput({ onSubmitEditing: this.createCategory })
-          )}
+          {this.state.addingCategory &&
+            this.renderTextInput({ onSubmitEditing: this.createCategory })}
           {/* Task container */}
           <View style={styles.tasks}>
             <FlatList

@@ -8,7 +8,6 @@ import {
   FlatList,
   TextInput,
   Keyboard,
-  Animated,
 } from 'react-native';
 import { globalStyles } from '../styles';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -124,21 +123,35 @@ export default class TodoList extends React.Component {
   };
 
   deleteTodo = async (index) => {
-  console.log("Deleting checklist item: " + index);
-  let list = { ...this.props.list }; // Create a copy of the list object
+    console.log('Deleting checklist item: ' + index);
+    let list = { ...this.props.list }; // Create a copy of the list object
 
     // Delete checklist item
     list.todos.splice(index, 1);
 
-  // Update state and persist changes
-  this.props.updateList(list);
-  await this.props.saveList(list);
+    // Update state and persist changes
+    this.props.updateList(list);
+    await this.props.saveList(list);
+  };
+
+  deleteCategory = async () => {
+  console.log('Attempting to delete category');
+  const { list, lists } = this.props;
+  console.log('Current list:', list);
+  console.log('Deleting category with id:', list.id);
+
+  // Filter out the category with the given id from the lists array
+  const updatedLists = lists.filter((item) => item.id !== list.id);
+  console.log('Updated lists:', updatedLists);
+
+  // Save the updated lists to AsyncStorage
+  await this.props.saveList(updatedLists);
+  this.props.loadData()
+
+  console.log('Category deleted');
 };
 
-deleteCategory = async () => {
-    console.log("Deleting category: " + this.props.list.name);
-    console.log("This has not been added yet");
-  };
+
 
   renderTodo = (todo, index) => {
     const list = this.props.list;
@@ -146,7 +159,10 @@ deleteCategory = async () => {
     return (
       <View>
         {editingIndex === index ? (
-          this.renderTextInput({ onSubmitEditing: this.saveEditedTodo, index: index })
+          this.renderTextInput({
+            onSubmitEditing: this.saveEditedTodo,
+            index: index,
+          })
         ) : (
           <Swipeable
             renderRightActions={(_, dragX) => (
@@ -154,8 +170,7 @@ deleteCategory = async () => {
                 onEdit={() => this.startEditing(index, todo)}
                 onDelete={() => this.deleteTodo(index)}
               />
-            )}
-          >
+            )}>
             <TouchableOpacity
               style={[styles.container, { backgroundColor: `${list.color}40` }]}
               onPress={() => this.toggleChecklistCompleted(index)}>
@@ -190,35 +205,31 @@ deleteCategory = async () => {
     const list = this.props.list;
     return (
       <View>
-        
         {/* Category Swipeable */}
-          <Swipeable
-        renderRightActions={(_, dragX) => (
-          <SwipeableItem
-            onEdit={() => this.startEditing(index, list)}
-            onDelete={() => this.deleteCategory()}
-            isCategory={true}
-          />
-        )}
-      >
-          
-        {/* Open/Close Category Button */}
-        <TouchableOpacity
-          style={[styles.container, { backgroundColor: list.color }]}
-          onPress={this.toggleListOpened}>
-          {/* Check/Uncheck Button */}
-          <TouchableOpacity onPress={this.toggleCategoryCompleted}>
-            <Feather
-              name={list.completed ? 'check-square' : 'square'}
-              style={globalStyles.icon}
+        <Swipeable
+          renderRightActions={(_, dragX) => (
+            <SwipeableItem
+              onEdit={() => this.startEditing(index, list)}
+              onDelete={() => this.deleteCategory()}
+              isCategory={true}
             />
+          )}>
+          {/* Open/Close Category Button */}
+          <TouchableOpacity
+            style={[styles.container, { backgroundColor: list.color }]}
+            onPress={this.toggleListOpened}>
+            {/* Check/Uncheck Button */}
+            <TouchableOpacity onPress={this.toggleCategoryCompleted}>
+              <Feather
+                name={list.completed ? 'check-square' : 'square'}
+                style={globalStyles.icon}
+              />
+            </TouchableOpacity>
+            <Text style={globalStyles.categoryText} numberOfLines={1}>
+              {list.name}
+            </Text>
           </TouchableOpacity>
-          <Text style={globalStyles.categoryText} numberOfLines={1}>
-            {list.name}
-          </Text>
-        </TouchableOpacity>
-        
-          </Swipeable>
+        </Swipeable>
         <View>
           {/* Only shows tasks if the current list is open */}
           {list.opened && (
