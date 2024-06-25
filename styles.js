@@ -15,4 +15,11 @@ export const globalStyles = StyleSheet.create({
     outlineStyle: 'none',
     width: '85%',
   },
+  todoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 46,
+    marginBottom: 5,
+    borderRadius: 10,
+  },
 });

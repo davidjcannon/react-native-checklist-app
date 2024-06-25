@@ -35,6 +35,9 @@ export default class TodoList extends React.Component {
     let list = this.props.list;
     list.todos.push({ title: this.state.todoText, completed: false });
 
+    // When adding a new item, uncheck category box
+    this.props.list.completed = false;
+
     this.props.updateList(list);
     await this.props.saveList(list);
 
@@ -62,36 +65,14 @@ export default class TodoList extends React.Component {
     await this.props.saveList(list);
   };
 
-  // Toggles the whole checklist category completed or not
-  toggleCategoryCompleted = async () => {
-    const updatedList = {
-      // Toggles the category button specifically
-      ...this.props.list,
-      completed: !this.props.list.completed,
-      // Goes into the categories todos and sets them all to the same condition as the category button
-      todos: this.props.list.todos.map((task) => ({
-        ...task,
-        completed: !this.props.list.completed,
-      })),
-    };
-
-    this.props.updateList(updatedList);
-    await this.props.saveList(list);
-  };
-
-  // Allows you to open/close category lists
-  toggleListOpened = async () => {
-    let list = { ...this.props.list };
-    list.opened = !list.opened;
-
-    this.props.updateList(list);
-    await this.props.saveList(list);
-  };
-
-  renderTextInput = ({ onSubmitEditing, index }) => {
+  renderItemInput = ({ onSubmitEditing }) => {
     const list = this.props.list;
     return (
-      <View style={[styles.container, { backgroundColor: `${list.color}40` }]}>
+      <View
+        style={[
+          globalStyles.todoContainer,
+          { backgroundColor: `${list.color}40` },
+        ]}>
         <Feather name="square" style={globalStyles.icon} />
         <TextInput
           ref={this.props.textFocus}
@@ -108,7 +89,13 @@ export default class TodoList extends React.Component {
   };
 
   startEditing = (index, todo) => {
+    console.log(this.state.editingIndex);
     this.setState({ editingIndex: index, todoText: todo.title });
+    console.log(
+      'Editing Index: ' + this.state.editingIndex + ' / Index: ' + index
+    );
+    console.log('Todo Text: ' + todo.title);
+    console.log('Todo: ' + todo);
   };
 
   saveEditedTodo = async () => {
@@ -135,23 +122,27 @@ export default class TodoList extends React.Component {
   };
 
   deleteCategory = async () => {
-  console.log('Attempting to delete category');
-  const { list, lists } = this.props;
-  console.log('Current list:', list);
-  console.log('Deleting category with id:', list.id);
+    console.log('Attempting to delete category');
+    const { list, lists } = this.props;
+    console.log('Current list:', lists);
+    console.log('Deleting category with id:', list.id);
 
-  // Filter out the category with the given id from the lists array
-  const updatedLists = lists.filter((item) => item.id !== list.id);
-  console.log('Updated lists:', updatedLists);
+    // Filter out the category with the given id from the lists array
+    let updatedLists = lists.filter((item) => item.id !== list.id);
+    console.log('Updated lists:', updatedLists);
 
-  // Save the updated lists to AsyncStorage
-  await this.props.saveList(updatedLists);
-  this.props.loadData()
+    // Re-index categories
+    updatedLists = updatedLists.map((item, idx) => ({
+      ...item,
+      id: idx + 1, // Re-index starting from 1
+    }));
 
-  console.log('Category deleted');
-};
+    // Save the updated lists to AsyncStorage
+    await this.props.saveList(updatedLists);
+    this.props.loadData();
 
-
+    console.log('Category deleted');
+  };
 
   renderTodo = (todo, index) => {
     const list = this.props.list;
@@ -159,10 +150,7 @@ export default class TodoList extends React.Component {
     return (
       <View>
         {editingIndex === index ? (
-          this.renderTextInput({
-            onSubmitEditing: this.saveEditedTodo,
-            index: index,
-          })
+          this.renderItemInput({ onSubmitEditing: this.saveEditedTodo })
         ) : (
           <Swipeable
             renderRightActions={(_, dragX) => (
@@ -172,7 +160,10 @@ export default class TodoList extends React.Component {
               />
             )}>
             <TouchableOpacity
-              style={[styles.container, { backgroundColor: `${list.color}40` }]}
+              style={[
+                globalStyles.todoContainer,
+                { backgroundColor: `${list.color}40` },
+              ]}
               onPress={() => this.toggleChecklistCompleted(index)}>
               <TouchableOpacity
                 onPress={() => this.toggleChecklistCompleted(index)}>
@@ -202,34 +193,24 @@ export default class TodoList extends React.Component {
   };
 
   render() {
-    const list = this.props.list;
+    const { list, renderCategory, addingCategoryId } = this.props;
     return (
       <View>
-        {/* Category Swipeable */}
-        <Swipeable
-          renderRightActions={(_, dragX) => (
-            <SwipeableItem
-              onEdit={() => this.startEditing(index, list)}
-              onDelete={() => this.deleteCategory()}
-              isCategory={true}
-            />
-          )}>
-          {/* Open/Close Category Button */}
-          <TouchableOpacity
-            style={[styles.container, { backgroundColor: list.color }]}
-            onPress={this.toggleListOpened}>
-            {/* Check/Uncheck Button */}
-            <TouchableOpacity onPress={this.toggleCategoryCompleted}>
-              <Feather
-                name={list.completed ? 'check-square' : 'square'}
-                style={globalStyles.icon}
+        {addingCategoryId === list.id ? (
+          renderCategory(list, true)
+        ) : (
+          // Category Swipeable
+          <Swipeable
+            renderRightActions={(_, dragX) => (
+              <SwipeableItem
+                onEdit={() => this.props.startCategoryEditing(list.id)}
+                onDelete={() => this.deleteCategory()}
+                isCategory={true}
               />
-            </TouchableOpacity>
-            <Text style={globalStyles.categoryText} numberOfLines={1}>
-              {list.name}
-            </Text>
-          </TouchableOpacity>
-        </Swipeable>
+            )}>
+            {renderCategory(list)}
+          </Swipeable>
+        )}
         <View>
           {/* Only shows tasks if the current list is open */}
           {list.opened && (
@@ -241,7 +222,7 @@ export default class TodoList extends React.Component {
                 keyExtractor={(item) => item.title}
               />
               {this.state.addingTodo ? (
-                this.renderTextInput({ onSubmitEditing: this.createTodo })
+                this.renderItemInput({ onSubmitEditing: this.createTodo })
               ) : (
                 // Add Button
                 <TouchableOpacity
@@ -263,13 +244,6 @@ export default class TodoList extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 46,
-    marginBottom: 5,
-    borderRadius: 10,
-  },
   itemText: {
     paddingLeft: 6,
     fontSize: 16,
@@ -289,18 +263,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingBottom: 2,
     paddingLeft: 2,
-  },
-  gestures: {
-    flexDirection: 'row',
-  },
-  swipeButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 60,
-    borderRadius: 10,
-    marginBottom: 5,
-    marginLeft: 5,
-    opacity: 1,
   },
 });

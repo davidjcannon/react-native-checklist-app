@@ -5,13 +5,15 @@ export default function SwipeableItem({ onEdit, onDelete, isCategory = false }) 
   return (
     <Animated.View style={{ flexDirection: 'row' }}>
       {/* Category Settings Button (only for categories) */}
+      
+      {/*
       {isCategory && (
         <TouchableOpacity onPress={() => console.log('Category Settings')}>
           <Animated.View style={[styles.swipeButton, { backgroundColor: '#2196F3' }]}>
             <Feather name="settings" style={{ color: 'white', fontSize: 30 }} />
           </Animated.View>
         </TouchableOpacity>
-      )}
+      )}*/}
 
       {/* Edit Button */}
       <TouchableOpacity onPress={onEdit}>

@@ -27,17 +27,18 @@ export default class App extends React.Component {
   state = {
     settingsVisible: false,
     addingCategory: false,
+    addingCategoryId: null,
     backgroundColor: DEFAULT_BACKGROUND_COLOR,
     lists: tempData,
     categoryText: '',
   };
 
   // Toggles the settings modal
-  toggleSettingsModal() {
+  toggleSettingsModal = async () => {
     this.setState({ settingsVisible: !this.state.settingsVisible });
     if (this.state.settingsVisible == true) {
       console.log('Closing modal and loading data');
-      this.loadData();
+      await this.loadData();
     }
   }
 
@@ -49,32 +50,99 @@ export default class App extends React.Component {
   // Checks if the previous state is the same as the current state, if so throw an error
   async componentDidUpdate(_, prevState) {
     if (prevState.lists !== this.state.lists) {
-      try {
-        await AsyncStorage.setItem('lists', JSON.stringify(this.state.lists));
-      } catch (error) {
-        console.log('Error saving lists:', error);
-      }
+      saveList(this.state.lists);
     }
   }
 
   // Makes the adding category text box appear when "Add Category" is clicked
   AddCategory = () => {
-    this.setState({ addingCategory: true }, () => {
-      this.textFocus.current.focus(); // Focus the TextInput
+    this.setState({ addingCategory: true, categoryText: '' }, () => {
+      this.textFocus.current.focus();
     });
   };
 
   // Create a new checklist item
   createCategory = () => {
-    const { categoryText } = this.state;
-    const color = '#FFFFFF';
+    const { categoryText, addingCategory, addingCategoryId, lists } = this.state;
 
-    const list = { name: categoryText, color: '#FFFFFF', opened: true };
+    // Define updatedLists based on whether adding a new category or editing an existing one
+    const updatedLists = addingCategory
+      ? [
+          // Adding a new category
+          {
+            id: lists.length + 1,
+            name: categoryText,
+            color: '#FFFFFF',
+            opened: true,
+            todos: [],
+          },
+          ...lists,
+        ]
+      : lists.map((list) =>
+          // Editing an existing category
+          list.id === addingCategoryId ? { ...list, name: categoryText } : list
+        );
 
-    this.addList(list);
+    // Update the state with new lists and reset category-related states
+    this.setState({
+      lists: updatedLists,
+      addingCategory: false,
+      addingCategoryId: null,
+      categoryText: '',
+    });
+  };
 
-    // Makes add category box disappear and returns text to default
-    this.setState({ categoryText: '', addingCategory: false });
+  startCategoryEditing = (id) => {
+    const list = this.state.lists.find((list) => list.id === id);
+    this.setState(
+      { addingCategoryId: id, categoryText: list.name, addingCategory: false },
+      () => {
+        this.textFocus.current.focus(); // Focus the TextInput
+      }
+    );
+  };
+
+  saveEditedCategory = async () => {
+    const { addingCategoryId, categoryText, lists } = this.state;
+    const updatedLists = lists.map((list) => {
+      if (list.id === addingCategoryId) {
+        return { ...list, name: categoryText }; // Update the name, keep other properties
+      }
+      return list;
+    });
+
+    this.setState({
+      lists: updatedLists,
+      addingCategoryId: null,
+      categoryText: '',
+    });
+
+    saveList(updatedLists);
+  };
+
+  // Toggles the whole checklist category completed or not
+  toggleCategoryCompleted = async (listId) => {
+    const updatedLists = this.state.lists.map((list) => {
+      if (list.id === listId) {
+        const completed = !list.completed;
+        return {
+          ...list,
+          completed,
+          todos: list.todos.map((task) => ({ ...task, completed })),
+        };
+      }
+      return list;
+    });
+
+    this.setState({ lists: updatedLists }, () => this.saveList(updatedLists));
+  };
+
+  // Allows you to open/close category lists
+  toggleListOpened = async (id) => {
+    const updatedLists = this.state.lists.map((list) =>
+      list.id === id ? { ...list, opened: !list.opened } : list
+    );
+    this.setState({ lists: updatedLists }, () => this.saveList(updatedLists));
   };
 
   // Updates background color to the given color
@@ -97,6 +165,10 @@ export default class App extends React.Component {
     return newColor.toHexString();
   }
 
+  changeCategoryText = (text) => {
+    setCategoryText(text);
+  };
+
   renderList = (list) => {
     return (
       <TodoList
@@ -106,6 +178,11 @@ export default class App extends React.Component {
         updateList={this.updateList}
         saveList={this.saveList}
         loadData={this.loadData}
+        addingCategoryId={this.state.addingCategoryId}
+        startCategoryEditing={this.startCategoryEditing}
+        renderCategory={this.renderCategory}
+        categoryText={this.state.categoryText}
+        changeCategoryText={this.changeCategoryText}
       />
     );
   };
@@ -158,26 +235,58 @@ export default class App extends React.Component {
     }
   };
 
-  renderTextInput = ({ onSubmitEditing, index }) => {
+  renderCategoryInput = () => {
+    return <Text>Old code</Text>;
+  };
+
+  renderCategory = (list, isInput = false) => {
+    let categoryColor, boxCheck;
+
+    // Set values from list
+    try {
+      categoryColor = list.color;
+      boxCheck = list.completed;
+      // If it can't find list values set defaults
+    } catch (error) {
+      // Checks whether or not you're inputting a new category as to not create weird effect
+      categoryColor = isInput ? '' : '#FFFFFF';
+      boxCheck = false;
+    }
+
     return (
-      <View style={styles.categoryInput}>
-        <Feather name="square" style={globalStyles.icon} />
-        <TextInput
-          ref={this.textFocus}
-          style={globalStyles.categoryText}
-          placeholder="Category name..."
-          placeholderTextColor="black"
-          value={this.state.categoryText}
-          maxLength={20}
-          onChangeText={(text) => this.setState({ categoryText: text })}
-          onSubmitEditing={onSubmitEditing}
-        />
-      </View>
+      // Open/Close Category Button
+      <TouchableOpacity
+        style={[globalStyles.todoContainer, { backgroundColor: categoryColor }]}
+        onPress={() => this.toggleListOpened(list.id)}>
+        {/* Check/Uncheck Button */}
+        <TouchableOpacity onPress={() => this.toggleCategoryCompleted(list.id)}>
+          <Feather
+            name={boxCheck ? 'check-square' : 'square'}
+            style={globalStyles.icon}
+          />
+        </TouchableOpacity>
+        {isInput === false ? (
+          <Text style={globalStyles.categoryText} numberOfLines={1}>
+            {list.name}
+          </Text>
+        ) : (
+          <TextInput
+            ref={this.textFocus}
+            style={globalStyles.categoryText}
+            placeholder="Category name..."
+            placeholderTextColor="black"
+            value={this.state.categoryText}
+            maxLength={20}
+            onChangeText={(text) => this.setState({ categoryText: text })}
+            onSubmitEditing={this.createCategory}
+          />
+        )}
+      </TouchableOpacity>
     );
   };
 
   render() {
-    const { backgroundColor } = this.state;
+    const { backgroundColor, addingCategory, addingCategoryId } = this.state;
 
     return (
       <SafeAreaView style={styles.container}>
@@ -204,8 +313,11 @@ export default class App extends React.Component {
           </View>
 
           {/* Adding new category box */}
-          {this.state.addingCategory &&
-            this.renderTextInput({ onSubmitEditing: this.createCategory })}
+          {addingCategory && (
+            <View style={styles.categoryInput}>
+              {this.renderCategory(null, true)}
+            </View>
+          )}
           {/* Task container */}
           <View style={styles.tasks}>
             <FlatList
@@ -221,7 +333,7 @@ export default class App extends React.Component {
         </View>
 
         {/* Add Category button (Hovers above everything) */}
-        {!this.state.addingCategory && (
+        {!addingCategory && addingCategoryId === null && (
           <TouchableOpacity
             style={styles.addCategory}
             onPress={this.AddCategory}>
@@ -289,14 +401,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 40,
     width: 160,
-    height: 38,
+    height: 46,
     marginBottom: 24,
   },
   categoryInput: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    height: 40,
+    height: 46,
     marginBottom: 5,
     borderRadius: 10,
     marginHorizontal: 16,
