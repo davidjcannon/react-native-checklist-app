@@ -382,6 +382,9 @@ const styles = StyleSheet.create({
   tasks: {
     paddingHorizontal: 16,
     height: '100%',
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
   },
   title: {
     margin: 24,
